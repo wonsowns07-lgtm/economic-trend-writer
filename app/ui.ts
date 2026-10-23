@@ -1,15 +1,15 @@
 // 화면의 칸들이 함께 쓰는 모양(Tailwind 클래스). 여러 파일에서 같은 모양을 쓰려고 한곳에 모았다.
 // 색은 globals.css의 기준 색(surface, muted, accent 등)을 쓰므로 밝은 화면·어두운 화면에서 자동으로 바뀐다.
 
-export const card = "rounded-3xl bg-surface p-6 sm:p-8";
+export const card = "liquid-glass rounded-[1.25rem] p-6 sm:p-8";
 export const lockedCard = `${card} opacity-50`;
 export const heading = "flex flex-wrap items-center gap-3 text-xl font-bold tracking-tight";
 export const stepNumber =
-  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-bold text-white";
+  "flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-black";
 export const hint = "mt-2 text-[15px] leading-6 text-muted";
 const pill =
   "rounded-full px-6 py-3.5 text-[15px] font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40";
-export const button = `${pill} bg-surface-strong text-foreground hover:bg-line`;
-export const primaryButton = `${pill} bg-accent text-white hover:bg-accent-strong`;
+export const button = `${pill} liquid-glass text-white hover:bg-white/10`;
+export const primaryButton = `${pill} bg-white text-black hover:bg-white/85`;
 export const fieldBox = "rounded-2xl border border-line bg-transparent px-4 py-3 text-[15px]";
 export const subtleBox = "rounded-2xl bg-surface-strong px-4 py-3.5 text-[15px] text-muted";

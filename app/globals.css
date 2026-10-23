@@ -1,35 +1,24 @@
 @import "tailwindcss";
 
+/* 화면은 늘 어두운 모양이라, dark: 로 적은 색(상태 글씨 등)이 시스템 설정과 상관없이 적용되게 한다. */
+@custom-variant dark (&:not(.never-dark));
+
 /*
- * 화면 색과 모양의 기준. 토스뱅크 사이트처럼 어두운 거의 검정 바탕에 아주 둥근 카드, 파란 포인트 색을 쓴다.
- * 밝은 화면(시스템 설정)에서는 연한 회색 바탕에 흰 카드로 바뀐다. 토스의 로고·이름·글꼴은 쓰지 않는다.
+ * 화면 색과 모양의 기준. 검정 바탕 위에 영상을 깔고, 카드는 반투명 유리(liquid-glass)로 만든다. 글씨는 모두 흰색이다.
+ * (우주 여행 랜딩 페이지 디자인 프롬프트를 참고한 모양. 화면 모양만 바꾸고 동작은 그대로다.)
  */
 :root {
-  --background: #f2f4f6;
-  --foreground: #191f28;
-  --surface: #ffffff;
-  --surface-strong: #f2f4f6;
-  --muted: #6b7684;
-  --line: rgba(25, 31, 40, 0.08);
-  --accent: #3182f6;
-  --accent-strong: #1b64da;
-  --accent-soft: rgba(49, 130, 246, 0.1);
-  --header-bg: rgba(242, 244, 246, 0.8);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #101013;
-    --foreground: #f9fafb;
-    --surface: rgba(209, 209, 253, 0.06);
-    --surface-strong: rgba(222, 222, 255, 0.12);
-    --muted: #b0b8c1;
-    --line: rgba(222, 222, 255, 0.1);
-    --accent: #4593fc;
-    --accent-strong: #3182f6;
-    --accent-soft: rgba(69, 147, 252, 0.16);
-    --header-bg: rgba(16, 16, 19, 0.72);
-  }
+  color-scheme: dark;
+  --background: #000000;
+  --foreground: #ffffff;
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-strong: rgba(255, 255, 255, 0.1);
+  --muted: rgba(255, 255, 255, 0.72);
+  --line: rgba(255, 255, 255, 0.14);
+  --accent: #ffffff;
+  --accent-strong: rgba(255, 255, 255, 0.85);
+  --accent-soft: rgba(255, 255, 255, 0.12);
+  --header-bg: rgba(0, 0, 0, 0.35);
 }
 
 @theme inline {
@@ -44,6 +33,8 @@
   --color-accent-soft: var(--accent-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-instrument), "Noto Serif KR", "Batang", serif;
+  --font-body: var(--font-barlow), Pretendard, "Malgun Gothic", sans-serif;
 }
 
 body {
@@ -52,7 +43,7 @@ body {
   /* 한국어가 글자 중간이 아니라 단어 단위로 줄바꿈되게 한다. */
   word-break: keep-all;
   overflow-wrap: break-word;
-  font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", Arial, Helvetica, sans-serif;
+  font-family: var(--font-barlow), "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -67,4 +58,58 @@ body {
   * {
     transition: none !important;
   }
+}
+
+/* 제목용 글꼴: Instrument Serif 기울임. 한글 글꼴은 따로 없어 영어·숫자에 주로 보인다. */
+.font-heading {
+  font-family: var(--font-heading);
+  font-style: italic;
+}
+
+/* 유리 느낌의 카드. 은은한 흐림과 위아래가 밝은 테두리를 쓴다. */
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.15) 20%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.15) 80%, rgba(255, 255, 255, 0.45) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 더 짙게 흐린 유리. 눈에 띄어야 하는 버튼에 쓴다. */
+.liquid-glass-strong {
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  border: none;
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+.liquid-glass-strong::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.2) 20%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.2) 80%, rgba(255, 255, 255, 0.5) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
 }
