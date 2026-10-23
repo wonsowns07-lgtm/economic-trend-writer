@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import ExtractPanel from "./extract-panel";
+import TradePanel from "./trade-panel";
 
 export default function Home() {
   return (
@@ -41,6 +42,8 @@ export default function Home() {
         </header>
 
         <ExtractPanel />
+
+        <TradePanel />
       </main>
     </>
   );
