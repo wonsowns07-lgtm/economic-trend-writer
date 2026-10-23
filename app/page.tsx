@@ -29,8 +29,7 @@ export default function Home() {
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-5 pb-16 pt-10 sm:px-6 sm:pt-14">
         <header className="flex flex-col items-start pb-4">
-          <span className="liquid-glass mb-6 inline-flex items-center gap-2 rounded-full p-1 pr-3.5 text-sm text-black">
-            <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">비공식</span>
+          <span className="liquid-glass mb-6 inline-flex items-center rounded-full px-4 py-1.5 text-sm text-black">
             재정경제부 경제분석과 보조 도구
           </span>
           <h1 className="font-heading text-[2.6rem] leading-[1.1] tracking-[-1px] sm:text-6xl sm:tracking-[-2px]">
