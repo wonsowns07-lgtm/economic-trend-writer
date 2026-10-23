@@ -9,10 +9,12 @@ import { crossCheck, readSources, type CrossCheckResult, type CrossStatus } from
 import { derivePeriod, EXPECTED_INDICATORS } from "../lib/extract";
 import type { Indicator, IndicatorStatus } from "../lib/indicators";
 import { extractPdfPages, looksLikePdf } from "../lib/pdf";
+import { readSeries } from "../lib/series";
 import { blankTable, buildTable, formatPeriod, formatSource, initialText, rowKey } from "../lib/table";
 import type { ValidationStatus } from "../lib/validate";
 import { withDraftMark } from "../lib/summary";
 import { selectPassed, summarize, verifyTable } from "../lib/verify";
+import IndicatorChart from "./indicator-chart";
 import { button, card, heading, hint, lockedCard, primaryButton, stepNumber } from "./ui";
 
 type Phase =
@@ -222,6 +224,22 @@ export default function ExtractPanel() {
     for (const row of table?.indicators ?? []) counts[crossResults[rowKey(row)].status] += 1;
     return counts;
   }, [table, crossResults]);
+  // 그래프: 보도자료의 표에 이어 적힌 최근 다섯 달 흐름. 마지막 값이 표의 값과 다르면 알려 준다.
+  const seriesList = useMemo(() => (sourcePages ? readSeries(sourcePages, effectivePeriod) : []), [sourcePages, effectivePeriod]);
+  const chartWarnings = useMemo(() => {
+    const out: string[] = [];
+    for (const s of seriesList) {
+      const find = (comparison: string) => table?.indicators.find((row) => row.name === s.name && row.comparison === comparison)?.value ?? null;
+      const pairs: Array<[string, number | null, number | undefined]> = [
+        [s.primaryLabel, find(s.primaryLabel), s.primary[s.primary.length - 1]],
+        ...(s.secondary && s.secondaryLabel ? [[s.secondaryLabel, find(s.secondaryLabel), s.secondary[s.secondary.length - 1]] as [string, number | null, number | undefined]] : []),
+      ];
+      for (const [label, current, last] of pairs) {
+        if (current !== null && last !== undefined && Math.abs(current - last) > 1e-9) out.push(`${s.name} ${label}: 표의 값(${current})과 그래프의 마지막 값(${last})이 다릅니다.`);
+      }
+    }
+    return out;
+  }, [seriesList, table]);
   // 종합평가 초안에는 검증을 통과했고 교차 확인에서 불일치가 아닌 수치만 쓴다.
   const passedRows = useMemo(
     () => (table && verification ? selectPassed(table.indicators, verification).filter((row) => crossResults[rowKey(row)]?.status !== "불일치") : []),
@@ -409,6 +427,29 @@ export default function ExtractPanel() {
           </table>
         </div>
       </section>
+
+      {/* 그래프 */}
+      {seriesList.length > 0 && (
+        <section aria-labelledby="charts" className={card}>
+          <h2 id="charts" className={heading}>
+            <span className={stepNumber}>＋</span>그래프
+            {effectivePeriod && <span className="text-sm font-normal text-muted">{formatPeriod(effectivePeriod)} 자료</span>}
+          </h2>
+          <p className={hint}>보도자료 표에 적힌 최근 다섯 달 수치를 그대로 그렸습니다. 막대는 전월 대비(경기지수는 전월차), 선은 전년동월 대비입니다.</p>
+          {chartWarnings.length > 0 && (
+            <ul role="alert" className="mt-3 list-disc rounded-2xl bg-red-500/10 py-3 pl-8 pr-4 text-sm text-red-700 dark:text-red-400">
+              {chartWarnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {seriesList.map((s) => (
+              <IndicatorChart key={s.name} series={s} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ③ 오류 검증 결과 */}
       <section aria-labelledby="step3" className={verification ? card : lockedCard}>
