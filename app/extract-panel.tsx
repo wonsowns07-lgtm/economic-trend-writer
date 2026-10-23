@@ -5,6 +5,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { compareDraft, summarizeFindings, type CompareStatus } from "../lib/compare";
+import { crossCheck, readSources, type CrossCheckResult, type CrossStatus } from "../lib/crosscheck";
 import { derivePeriod, EXPECTED_INDICATORS } from "../lib/extract";
 import type { Indicator, IndicatorStatus } from "../lib/indicators";
 import { extractPdfPages, looksLikePdf } from "../lib/pdf";
@@ -39,6 +40,12 @@ const COMPARE_STYLE: Record<CompareStatus, string> = {
   일치: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
 };
 
+const CROSS_STYLE: Record<CrossStatus, string> = {
+  "교차 확인": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+  불일치: "bg-red-500/10 text-red-700 dark:text-red-400",
+  "확인 못 함": "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+};
+
 const STATUS_STYLE: Record<IndicatorStatus, string> = {
   추출됨: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   빈칸: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
@@ -58,6 +65,7 @@ export default function ExtractPanel() {
   // 자동으로 기준 달을 알 수 없을 때(추출 실패) 담당자가 직접 적는 달. 예: 2026-08
   const [manualPeriod, setManualPeriod] = useState("");
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [sourcePages, setSourcePages] = useState<string[] | null>(null); // 교차 확인용 보도자료 글자 (이 화면 안에서만 쓰고 어디에도 보내지 않는다)
   const [texts, setTexts] = useState<Record<string, string>>({});
   // 작성본은 이 화면의 상태로만 두고, 서버·AI·브라우저 저장소 어디로도 보내지 않는다.
   const [draft, setDraft] = useState("");
@@ -134,6 +142,7 @@ export default function ExtractPanel() {
     if (!file) return;
     autoSummaryDone.current = false;
     setOriginals(null);
+    setSourcePages(null);
     setPeriod(null);
     setManualPeriod("");
     setTexts({});
@@ -156,6 +165,7 @@ export default function ExtractPanel() {
       failWithManualTable("PDF에서 글자를 꺼내지 못했습니다. 파일이 손상되었거나 암호가 걸려 있을 수 있습니다.", null);
       return;
     }
+    setSourcePages(pages);
     if (pages.every((page) => page.trim() === "")) {
       failWithManualTable("PDF에 글자가 없습니다. 그림으로만 된 스캔본일 수 있습니다.", null);
       return;
@@ -200,9 +210,22 @@ export default function ExtractPanel() {
     .sort((a, b) => Number(b.status === "불일치") - Number(a.status === "불일치"));
   const compareMatches = (comparison?.findings ?? []).filter((finding) => finding.status === "일치");
   // 종합평가 초안에는 검증을 통과한 수치만 쓴다.
+  // 교차 확인: AI가 읽은 값을 AI와 상관없이 규칙으로 다시 읽은 값(다른 표·본문 문장)과 맞춰 본다.
+  const readings = useMemo(() => (sourcePages ? readSources(sourcePages, effectivePeriod) : {}), [sourcePages, effectivePeriod]);
+  const crossResults = useMemo(() => {
+    const results: Record<string, CrossCheckResult> = {};
+    for (const row of table?.indicators ?? []) results[rowKey(row)] = crossCheck(row.name, row.comparison, row.value, readings);
+    return results;
+  }, [table, readings]);
+  const crossCounts = useMemo(() => {
+    const counts: Record<CrossStatus, number> = { "교차 확인": 0, 불일치: 0, "확인 못 함": 0 };
+    for (const row of table?.indicators ?? []) counts[crossResults[rowKey(row)].status] += 1;
+    return counts;
+  }, [table, crossResults]);
+  // 종합평가 초안에는 검증을 통과했고 교차 확인에서 불일치가 아닌 수치만 쓴다.
   const passedRows = useMemo(
-    () => (table && verification ? selectPassed(table.indicators, verification) : []),
-    [table, verification],
+    () => (table && verification ? selectPassed(table.indicators, verification).filter((row) => crossResults[rowKey(row)]?.status !== "불일치") : []),
+    [table, verification, crossResults],
   );
   const summaryItems = passedRows.map((row) => ({ name: row.name, comparison: row.comparison, unit: row.unit, value: row.value }));
   const summaryKey = JSON.stringify(summaryItems);
@@ -294,6 +317,12 @@ export default function ExtractPanel() {
           </label>
         )}
 
+        {rows && originals && (
+          <p className="mt-3 rounded-2xl bg-surface-strong px-4 py-3 text-sm">
+            <strong>교차 확인</strong>: AI가 읽은 값을 AI 없이 보도자료의 다른 표·본문 문장과 다시 맞춰 봤습니다. {rows.length}칸 중 <span className="font-semibold">{crossCounts["교차 확인"]}칸 일치</span>, <span className="font-semibold text-red-700 dark:text-red-400">{crossCounts.불일치}칸 불일치</span>, {crossCounts["확인 못 함"]}칸은 확인 못 함입니다. 불일치한 칸은 종합평가 초안에 쓰지 않습니다.
+          </p>
+        )}
+
         {warnings.length > 0 && (
           <ul className="mt-3 list-disc rounded-2xl bg-amber-500/10 py-3 pl-8 pr-4 text-sm text-amber-800 dark:text-amber-300">
             {warnings.map((warning) => (
@@ -311,7 +340,8 @@ export default function ExtractPanel() {
                 <th className="py-2 pr-3 font-medium">값</th>
                 <th className="py-2 pr-3 font-medium">단위</th>
                 <th className="py-2 pr-3 font-medium">원자료 위치</th>
-                <th className="py-2 font-medium">상태</th>
+                <th className="py-2 pr-3 font-medium">상태</th>
+                <th className="py-2 font-medium">교차 확인</th>
               </tr>
             </thead>
             <tbody>
@@ -342,11 +372,22 @@ export default function ExtractPanel() {
                         </td>
                         <td className="py-2 pr-3 text-muted">{row.unit}</td>
                         <td className="py-2 pr-3 text-muted">{formatSource(row.source)}</td>
-                        <td className="py-2">
+                        <td className="py-2 pr-3">
                           <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${STATUS_STYLE[row.status]}`}>
                             {row.status}
                           </span>
                         </td>
+                        <td className="py-2">
+                          {crossResults[key] && (
+                            <>
+                              <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${CROSS_STYLE[crossResults[key].status]}`}>
+                                {crossResults[key].status === "교차 확인" ? `교차 확인 ${crossResults[key].agree}곳` : crossResults[key].status}
+                              </span>
+                              <p className="mt-1 max-w-56 text-xs text-muted">{crossResults[key].detail}</p>
+                            </>
+                          )}
+                        </td>
+
                       </tr>
                     );
                   })
@@ -360,7 +401,8 @@ export default function ExtractPanel() {
                       <td className="py-2 pr-3 text-muted/60">—</td>
                       <td className="py-2 pr-3 text-muted">{row.unit}</td>
                       <td className="py-2 pr-3 text-muted/60">—</td>
-                      <td className="py-2 text-muted">대기</td>
+                      <td className="py-2 pr-3 text-muted">대기</td>
+                      <td className="py-2 text-muted">—</td>
                     </tr>
                   ))}
             </tbody>
