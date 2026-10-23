@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/*
+ * 화면 색과 모양의 기준. 토스뱅크 사이트처럼 어두운 거의 검정 바탕에 아주 둥근 카드, 파란 포인트 색을 쓴다.
+ * 밝은 화면(시스템 설정)에서는 연한 회색 바탕에 흰 카드로 바뀐다. 토스의 로고·이름·글꼴은 쓰지 않는다.
+ */
+:root {
+  --background: #f2f4f6;
+  --foreground: #191f28;
+  --surface: #ffffff;
+  --surface-strong: #f2f4f6;
+  --muted: #6b7684;
+  --line: rgba(25, 31, 40, 0.08);
+  --accent: #3182f6;
+  --accent-strong: #1b64da;
+  --accent-soft: rgba(49, 130, 246, 0.1);
+  --header-bg: rgba(242, 244, 246, 0.8);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #101013;
+    --foreground: #f9fafb;
+    --surface: rgba(209, 209, 253, 0.06);
+    --surface-strong: rgba(222, 222, 255, 0.12);
+    --muted: #b0b8c1;
+    --line: rgba(222, 222, 255, 0.1);
+    --accent: #4593fc;
+    --accent-strong: #3182f6;
+    --accent-soft: rgba(69, 147, 252, 0.16);
+    --header-bg: rgba(16, 16, 19, 0.72);
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  /* 한국어가 글자 중간이 아니라 단어 단위로 줄바꿈되게 한다. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  font-family: "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 키보드로 움직일 때 어디에 있는지 보이게 한다. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 움직임을 줄이도록 설정한 사람에게는 전환 효과를 끈다. */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
