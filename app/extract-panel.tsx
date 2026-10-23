@@ -213,8 +213,12 @@ export default function ExtractPanel() {
   useEffect(() => {
     if (phase.kind !== "done" || autoSummaryDone.current) return;
     if (!effectivePeriod || summaryItems.length === 0 || summaryText !== "" || summaryPhase !== "idle") return;
-    autoSummaryDone.current = true;
-    void makeSummary();
+    // 효과 안에서 바로 상태를 바꾸지 않고 한 박자 뒤에 시작한다.
+    const timer = setTimeout(() => {
+      autoSummaryDone.current = true;
+      void makeSummary();
+    }, 0);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase.kind, effectivePeriod, summaryKey]);
   const problems = verification?.filter((item) => item.result.status !== "통과") ?? [];

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Barlow, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
-import VideoBackground from "./video-background";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +37,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${instrument.variable} ${barlow.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <VideoBackground />
         {children}
       </body>
     </html>

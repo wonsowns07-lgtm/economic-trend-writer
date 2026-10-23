@@ -10,9 +10,9 @@ export default function Home() {
   return (
     <>
       {/* 위쪽에 붙어 있는 반투명 상단 바. 로고는 투명 배경 PNG이고 글씨가 진한 회색이라 어두운 화면에서도 보이도록 흰 칸에 둔다. */}
-      <div className="sticky top-0 z-10 bg-[var(--header-bg)] backdrop-blur-md">
+      <div className="sticky top-0 z-10 border-b-2 border-black bg-[var(--header-bg)]">
         <div className="mx-auto flex h-16 w-full max-w-3xl items-center px-5 sm:px-6">
-          <div className="rounded-xl bg-white px-3 py-1.5">
+          <div className="px-0 py-1.5">
             <Image
               src="/logo.png"
               alt="재정경제부"
@@ -29,11 +29,11 @@ export default function Home() {
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 px-5 pb-16 pt-10 sm:px-6 sm:pt-14">
         <header className="flex flex-col items-start pb-4">
-          <span className="liquid-glass mb-6 inline-flex items-center gap-2 rounded-full p-1 pr-3.5 text-sm text-white/90">
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-black">비공식</span>
+          <span className="liquid-glass mb-6 inline-flex items-center gap-2 rounded-full p-1 pr-3.5 text-sm text-black">
+            <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white">비공식</span>
             재정경제부 경제분석과 보조 도구
           </span>
-          <h1 className="font-heading text-[2.6rem] leading-[0.95] tracking-[-1px] sm:text-6xl sm:tracking-[-2px]">
+          <h1 className="font-heading text-[2.6rem] leading-[1.1] tracking-[-1px] sm:text-6xl sm:tracking-[-2px]">
             최근경제동향
             <br />
             작성 도우미
@@ -41,7 +41,7 @@ export default function Home() {
           <p className="mt-5 text-lg leading-8 text-muted">
             산업활동동향 보도자료에서 수치를 뽑고, 오류를 검증하고, 종합평가 초안을 만들어 드립니다.
           </p>
-          <p className="mt-2 text-[15px] leading-6 text-muted/70">
+          <p className="mt-2 text-[15px] leading-6 text-muted">
             공개된 보도자료만 올려 주세요. 작성본은 이 화면 밖으로 나가지 않습니다.
           </p>
         </header>
