@@ -2,6 +2,7 @@
 // Plan SC: PLAN 7번 작업. AI에는 수치 표가 있는 쪽의 공개자료 글자만 보낸다. 받은 글자는 저장하지 않고 기록(로그)에도 남기지 않는다.
 
 import { AiError, askJson, type AiErrorKind } from "../../../lib/ai";
+import { requireAuth } from "../../../lib/auth";
 import { guardRequest } from "../../../lib/guard";
 import {
   assembleIndicators,
@@ -35,6 +36,8 @@ const AI_ERROR_STATUS: Record<AiErrorKind, number> = {
 };
 
 export async function POST(request: Request) {
+  const unauthorized = requireAuth(request);
+  if (unauthorized) return unauthorized;
   const blocked = guardRequest(request, { name: "extract", rule: EXTRACT_RATE_LIMIT, maxBodyBytes: MAX_BODY_BYTES });
   if (blocked) return blocked;
 

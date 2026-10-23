@@ -36,6 +36,7 @@ npm install
 
 ```bash
 OPENAI_API_KEY=여기에_키를_넣으세요
+APP_PASSWORD=여기에_사용할_비밀번호
 ```
 
 ```bash

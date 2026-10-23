@@ -3,6 +3,7 @@
 
 import Image from "next/image";
 import ExtractPanel from "./extract-panel";
+import PasswordGate from "./password-gate";
 
 export default function Home() {
   return (
@@ -40,7 +41,9 @@ export default function Home() {
           </p>
         </header>
 
-        <ExtractPanel />
+        <PasswordGate>
+          <ExtractPanel />
+        </PasswordGate>
       </main>
     </>
   );

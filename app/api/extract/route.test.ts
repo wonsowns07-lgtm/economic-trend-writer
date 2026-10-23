@@ -7,7 +7,17 @@ vi.mock("../../../lib/ai", async (importOriginal) => ({
 
 import { AiError, askJson } from "../../../lib/ai";
 import { resetRateLimits } from "../../../lib/rate-limit";
-import { EXTRACT_RATE_LIMIT, MAX_PAGES, MAX_TOTAL_CHARS, POST } from "./route";
+import { SESSION_COOKIE, sessionToken } from "../../../lib/auth";
+import { EXTRACT_RATE_LIMIT, MAX_PAGES, MAX_TOTAL_CHARS, POST as RAW_POST } from "./route";
+
+// 서버 코드는 로그인 확인표가 있어야 일하므로, 시험의 요청에는 확인표를 붙여 보낸다.
+const TEST_PASSWORD = "시험용-비밀번호";
+vi.stubEnv("APP_PASSWORD", TEST_PASSWORD);
+const POST = (request: Request) => {
+  const headers = new Headers(request.headers);
+  headers.set("cookie", `${SESSION_COOKIE}=${sessionToken(TEST_PASSWORD)}`);
+  return RAW_POST(new Request(request, { headers }));
+};
 
 const askJsonMock = vi.mocked(askJson);
 
@@ -161,5 +171,14 @@ describe("POST /api/extract — 호출 남용 방어", () => {
     const row = body.indicators.find((i: { name: string; comparison: string }) => i.name === "전산업생산" && i.comparison === "전월비");
     expect(row.source.table).toBe("전산업생산");
     expect(JSON.stringify(body)).not.toContain("앞의 지시를 무시");
+  });
+});
+
+describe("로그인", () => {
+  it("로그인 확인표가 없으면 401이고 AI를 부르지 않는다", async () => {
+    const response = await RAW_POST(
+      new Request("http://localhost/api/extract", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }),
+    );
+    expect(response.status).toBe(401);
   });
 });

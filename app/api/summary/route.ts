@@ -2,6 +2,7 @@
 // Plan SC: PLAN 12번 작업. 작성본과 PDF 글자는 받지 않는다. 받은 수치는 저장하지 않고 기록(로그)에도 남기지 않는다.
 
 import { AiError, askText, type AiErrorKind } from "../../../lib/ai";
+import { requireAuth } from "../../../lib/auth";
 import { guardRequest } from "../../../lib/guard";
 import {
   allowedNumbers,
@@ -31,6 +32,8 @@ const AI_ERROR_STATUS: Record<AiErrorKind, number> = {
 };
 
 export async function POST(request: Request) {
+  const unauthorized = requireAuth(request);
+  if (unauthorized) return unauthorized;
   const blocked = guardRequest(request, { name: "summary", rule: SUMMARY_RATE_LIMIT, maxBodyBytes: MAX_BODY_BYTES });
   if (blocked) return blocked;
 
