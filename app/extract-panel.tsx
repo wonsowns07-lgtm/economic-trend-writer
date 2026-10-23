@@ -3,7 +3,7 @@
 // Design Ref: §1 화면 구성 ①② — 파일을 올리면 브라우저가 글자를 꺼내고, 서버가 AI로 수치를 찾아 표로 보여 준다.
 // Plan SC: PLAN 9번 작업. 못 뽑은 칸은 빈칸으로 두고 담당자가 직접 입력하며, 고친 값은 "직접 입력"으로 표시한다.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { compareDraft, summarizeFindings, type CompareStatus } from "../lib/compare";
 import { derivePeriod, EXPECTED_INDICATORS } from "../lib/extract";
 import type { Indicator, IndicatorStatus } from "../lib/indicators";
@@ -132,6 +132,7 @@ export default function ExtractPanel() {
 
   async function extract() {
     if (!file) return;
+    autoSummaryDone.current = false;
     setOriginals(null);
     setPeriod(null);
     setManualPeriod("");
@@ -207,6 +208,15 @@ export default function ExtractPanel() {
   const summaryKey = JSON.stringify(summaryItems);
   const excludedCount = (table?.indicators.length ?? 0) - passedRows.length;
   const summaryBusy = summaryPhase === "busy";
+  // 수치를 찾으면 초안을 한 번 자동으로 만든다. (검증을 통과한 수치가 있을 때만. 그 뒤로는 담당자가 버튼으로 다시 만든다.)
+  const autoSummaryDone = useRef(false);
+  useEffect(() => {
+    if (phase.kind !== "done" || autoSummaryDone.current) return;
+    if (!effectivePeriod || summaryItems.length === 0 || summaryText !== "" || summaryPhase !== "idle") return;
+    autoSummaryDone.current = true;
+    void makeSummary();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase.kind, effectivePeriod, summaryKey]);
   const problems = verification?.filter((item) => item.result.status !== "통과") ?? [];
   const passed = verification?.filter((item) => item.result.status === "통과") ?? [];
   // 오류를 먼저, 그다음 검증 불가 순서로 보여 준다.
@@ -570,7 +580,7 @@ export default function ExtractPanel() {
           value={summaryText}
           onChange={(event) => setSummaryText(event.target.value)}
           rows={7}
-          placeholder="초안 만들기 버튼을 누르면 여기에 문장이 나옵니다. 나온 뒤에는 직접 고칠 수 있습니다."
+          placeholder="수치를 찾으면 초안이 자동으로 나옵니다. 나온 뒤에는 직접 고치거나 다시 만들 수 있습니다. 나온 뒤에는 직접 고칠 수 있습니다."
           aria-label="종합평가 초안"
           className="mt-3 w-full resize-y rounded-2xl border border-line bg-transparent p-4 text-[15px] leading-6"
         />
