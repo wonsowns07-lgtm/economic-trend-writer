@@ -4,6 +4,7 @@
 import Image from "next/image";
 import ExtractPanel from "./extract-panel";
 import PasswordGate from "./password-gate";
+import TradePanel from "./trade-panel";
 
 export default function Home() {
   return (
@@ -43,6 +44,8 @@ export default function Home() {
 
         <PasswordGate>
           <ExtractPanel />
+
+          <TradePanel />
         </PasswordGate>
       </main>
     </>
